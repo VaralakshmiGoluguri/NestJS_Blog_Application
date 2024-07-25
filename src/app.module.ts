@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { RatingModule } from './rating/rating.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { RatingModule } from './rating/rating.module';
     BlogsModule,
     UsersModule,
     RatingModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

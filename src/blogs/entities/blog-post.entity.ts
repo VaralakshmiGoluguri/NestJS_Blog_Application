@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Rating } from 'src/rating/entities/rating.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Comment } from 'src/comments/entities/comment.entity';
 import {
   Entity,
   Column,
@@ -50,4 +51,8 @@ export class BlogPost {
   @OneToMany(() => Rating, (rating) => rating.blogPost, { cascade: true })
   @ApiProperty({ description: 'Ratings for the blog post' })
   ratings: Rating[];
+
+  @OneToMany(() => Comment, (comment) => comment.blogPost)
+  @ApiProperty({ description: 'Comments for the blog post' })
+  comments: Comment[];
 }
