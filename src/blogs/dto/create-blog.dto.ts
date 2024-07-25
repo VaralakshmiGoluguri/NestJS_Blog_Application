@@ -25,4 +25,11 @@ export class CreateBlogPostDto {
   @IsArray()
   @IsOptional()
   mediaUrls?: string[];
+
+  // @ApiProperty({
+  //   description: 'UserId of whom the blog post belongs',
+  // })
+  // @IsNotEmpty()
+  // @IsString()
+  // userId: number;
 }

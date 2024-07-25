@@ -43,14 +43,13 @@ export class UserController {
   @ApiOperation({ summary: 'Login user and return JWT' })
   async login(
     @Body() loginUserDto: LoginUserDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ user: User; accessToken: string }> {
     const { email, password } = loginUserDto;
     const user = await this.userService.validateUser(email, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const accessToken = this.userService.generateJwtToken(user);
-    return { accessToken };
+    return { user, accessToken };
   }
 }
-

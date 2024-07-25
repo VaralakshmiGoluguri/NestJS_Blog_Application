@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Rating } from 'src/rating/entities/rating.entity';
+import { User } from 'src/users/entities/user.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 
 @Entity()
 export class BlogPost {
@@ -30,4 +38,16 @@ export class BlogPost {
   @Column('int', { default: 0 })
   @ApiProperty({ description: 'Average rating of the blog post', default: 0 })
   averageRating: number;
+
+  @ManyToOne(() => User, (user) => user.blogPosts, { onDelete: 'CASCADE' })
+  @ApiProperty({ description: 'User who created the blog post' })
+  user: User;
+
+  @Column()
+  @ApiProperty({ description: 'ID of the user who created the blog post' })
+  userId: number;
+
+  @OneToMany(() => Rating, (rating) => rating.blogPost, { cascade: true })
+  @ApiProperty({ description: 'Ratings for the blog post' })
+  ratings: Rating[];
 }

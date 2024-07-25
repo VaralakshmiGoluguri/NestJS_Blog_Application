@@ -6,12 +6,25 @@ import {
   Param,
   Delete,
   Patch,
+  UseGuards,
+  Req,
+  NotFoundException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { BlogsService } from './blogs.service';
 import { CreateBlogPostDto } from './dto/create-blog.dto';
-import { ApiBody, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { BlogPost } from './entities/blog-post.entity';
 import { DeleteResult, UpdateResult } from 'typeorm';
+import { JwtAuthGuard } from 'src/users/auth.guard';
 
 @ApiTags('Blogs')
 @Controller('blogs')
@@ -19,14 +32,16 @@ export class BlogsController {
   constructor(private readonly blogsService: BlogsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiResponse({
     status: 201,
     description: 'The blog post has been successfully created.',
     type: BlogPost,
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
-  async create(@Body() createBlogDto: CreateBlogPostDto) {
-    return await this.blogsService.create(createBlogDto);
+  async create(@Body() createBlogDto: CreateBlogPostDto, @Req() request) {
+    return await this.blogsService.create(createBlogDto, request.user.userId);
   }
 
   @Post('multiple')
@@ -44,6 +59,8 @@ export class BlogsController {
       ],
     },
   })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiResponse({
     status: 201,
     description: 'The blog posts have been successfully created.',
@@ -52,8 +69,12 @@ export class BlogsController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async createBlogPosts(
     @Body() createBlogPostsDto: CreateBlogPostDto[],
+    @Req() req,
   ): Promise<BlogPost[]> {
-    return await this.blogsService.createMultiple(createBlogPostsDto);
+    return await this.blogsService.createMultiple(
+      createBlogPostsDto,
+      req.user.userId,
+    );
   }
 
   @Get()
@@ -101,6 +122,8 @@ export class BlogsController {
       },
     },
   })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiResponse({
     status: 200,
     description: 'The blog post has been successfully updated.',
@@ -110,8 +133,13 @@ export class BlogsController {
   async updateBlogPost(
     @Param('id') id: number,
     @Body() updateBlogPostDto: Partial<CreateBlogPostDto>,
+    @Req() req,
   ): Promise<UpdateResult> {
-    return await this.blogsService.updateBlogPost(id, updateBlogPostDto);
+    return await this.blogsService.updateBlogPost(
+      id,
+      updateBlogPostDto,
+      req.user.userId,
+    );
   }
 
   @Delete(':id')
@@ -120,13 +148,52 @@ export class BlogsController {
     description: 'The ID of the blog post to delete',
     type: Number,
   })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiResponse({
     status: 200,
     description: 'The blog post has been successfully deleted.',
     type: DeleteResult,
   })
   @ApiResponse({ status: 404, description: 'Blog post not found' })
-  async deleteBlogPost(@Param('id') id: number): Promise<DeleteResult> {
-    return await this.blogsService.deleteBlogPost(id);
+  async deleteBlogPost(
+    @Param('id') id: number,
+    @Req() req,
+  ): Promise<DeleteResult> {
+    return await this.blogsService.deleteBlogPost(id, req.user.userId);
+  }
+
+  @Get('user/:userId')
+  @ApiOperation({ summary: 'Get all blog posts for a user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved blog posts',
+    type: [BlogPost],
+  })
+  @ApiResponse({ status: 404, description: 'User or blog posts not found' })
+  async findAllByUser(@Param('userId') userId: number): Promise<BlogPost[]> {
+    try {
+      return await this.blogsService.findAllByUser(userId);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  @Delete('user/all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Delete all blog posts of the logged-in user' })
+  @ApiResponse({
+    status: 200,
+    description: 'All blog posts deleted successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @HttpCode(HttpStatus.OK)
+  async deleteAllByUser(
+    @Req() req,
+  ): Promise<{ statusCode: number; message: string }> {
+    const userId = req.user.id;
+    return await this.blogsService.deleteAllByUser(userId);
   }
 }

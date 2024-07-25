@@ -1,5 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
+import { BlogPost } from 'src/blogs/entities/blog-post.entity';
+import { Rating } from 'src/rating/entities/rating.entity';
 
 @Entity()
 export class User {
@@ -21,9 +23,9 @@ export class User {
   @IsNotEmpty()
   password: string;
 
-  @Column({ nullable: true })
-  twoFactorSecret: string;
+  @OneToMany(() => BlogPost, (blogPost) => blogPost.userId)
+  blogPosts: BlogPost[];
 
-  @Column({ default: false })
-  isTwoFactorEnabled: boolean;
+  @OneToMany(() => Rating, (rating) => rating.user)
+  ratings: Rating[];
 }

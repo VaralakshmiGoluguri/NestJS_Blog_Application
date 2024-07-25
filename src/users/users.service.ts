@@ -5,12 +5,14 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly configService: ConfigService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -27,6 +29,7 @@ export class UserService {
     });
     return await this.userRepository.save(user);
   }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findOneBy({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -37,12 +40,16 @@ export class UserService {
 
   generateJwtToken(user: User): string {
     const payload = { email: user.email, sub: user.id };
-    return jwt.sign(
-      payload,
-      '6d67ccf51de64a2ebe78b6648acacde7d783663e3ce516e9fb5cb768610474f0',
-      { expiresIn: '1h' },
-    );
+    return jwt.sign(payload, this.configService.get<string>('JWT_SECRET'), {
+      expiresIn: '1h',
+    });
+  }
+
+  async findOne(id: number): Promise<User | null> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (user) {
+      return user;
+    }
+    return null;
   }
 }
-
-
