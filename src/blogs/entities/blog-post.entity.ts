@@ -37,7 +37,7 @@ export class BlogPost {
   })
   mediaUrls: string[];
 
-  @Column('int', { default: 0 })
+  @Column('float', { default: 0 })
   @ApiProperty({ description: 'Average rating of the blog post', default: 0 })
   averageRating: number;
 

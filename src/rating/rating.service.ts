@@ -1,3 +1,4 @@
+import { BlogsService } from 'src/blogs/blogs.service';
 import { UserService } from 'src/users/users.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,7 +15,7 @@ export class RatingService {
     private ratingRepository: Repository<Rating>,
     @InjectRepository(BlogPost)
     private BlogRepository: Repository<BlogPost>,
-    private userService: UserService,
+    private blogsService: BlogsService,
   ) {}
 
   async createRating(
@@ -23,25 +24,22 @@ export class RatingService {
     value: number,
     comment?: string,
   ) {
-    // const rating = this.ratingRepository.create({
-    //   user,
-    //   blogPost,
-    //   value,
-    //   comment,
-    // });
-    console.log('hello', user, blogPost, value, comment);
-    return this.ratingRepository.save({
-      user,
+    const email = user.email;
+    const rating = this.ratingRepository.save({
+      email,
       blogPost,
       value,
       comment,
     });
+    const averageRating = await this.getAverageRating(blogPost.id);
+    blogPost.averageRating = parseFloat(averageRating.toFixed(2));
+    this.BlogRepository.save(blogPost);
+    return rating;
   }
 
   async getRatingsByBlogPost(blogPostId: number): Promise<Rating[]> {
     const blogPost = await this.ratingRepository.find({
       where: { blogPost: { id: blogPostId } },
-      relations: ['user'],
     });
 
     if (!blogPost) {

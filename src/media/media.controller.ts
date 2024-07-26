@@ -95,7 +95,7 @@ export class MediaController {
   @ApiResponse({ status: 200, description: 'Delete all media by blogPostId' })
   removeAllByBlogPostId(
     @Param('blogPostId') blogPostId: number,
-  ): Promise<DeleteResult> {
+  ): Promise<void> {
     return this.mediaService.removeAllByBlogPostId(blogPostId);
   }
 

@@ -19,21 +19,8 @@ export class Rating {
   @Column({ type: 'text', nullable: true })
   comment: string;
 
-  // @ManyToOne(() => User, (user) => user.ratings)
-  // user: User;
-
-  // @Column()
-  // userId: number;
-
-  // @ManyToOne(() => BlogPost, (blogPost) => blogPost.ratings)
-  // blogPost: BlogPost;
-
-  // @Column()
-  // blogPostId: number;
-
-  @ManyToOne(() => User, (user) => user.ratings)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
+  @Column()
+  email: string;
 
   @ManyToOne(() => BlogPost, (blogPost) => blogPost.ratings)
   @JoinColumn({ name: 'blog_post_id' })

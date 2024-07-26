@@ -41,7 +41,7 @@ export class RatingController {
     @Param('blogPostId') blogPostId: number,
     @Body() createRatingDto: CreateRatingDto,
   ) {
-    const user = req.user as User;
+    const user = req.user;
     const blogPost = await this.blogsService.findById(blogPostId);
 
     if (!blogPost) {

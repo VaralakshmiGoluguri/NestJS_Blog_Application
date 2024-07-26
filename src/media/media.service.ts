@@ -51,7 +51,7 @@ export class MediaService {
     return result;
   }
 
-  async removeAllByBlogPostId(blogPostId: number): Promise<DeleteResult> {
+  async removeAllByBlogPostId(blogPostId: number): Promise<void> {
     await this.mediaRepository.delete({ blogPostId });
   }
 }

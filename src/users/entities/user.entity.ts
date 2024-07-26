@@ -27,6 +27,4 @@ export class User {
   @OneToMany(() => BlogPost, (blogPost) => blogPost.userId)
   blogPosts: BlogPost[];
 
-  @OneToMany(() => Rating, (rating) => rating.user)
-  ratings: Rating[];
 }
