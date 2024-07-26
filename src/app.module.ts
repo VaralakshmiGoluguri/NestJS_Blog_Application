@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { RatingModule } from './rating/rating.module';
 import { CommentsModule } from './comments/comments.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { CommentsModule } from './comments/comments.module';
     UsersModule,
     RatingModule,
     CommentsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

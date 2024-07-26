@@ -9,6 +9,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
+import { Media } from 'src/media/entities/media.entity';
 
 @Entity()
 export class BlogPost {
@@ -55,4 +56,11 @@ export class BlogPost {
   @OneToMany(() => Comment, (comment) => comment.blogPost)
   @ApiProperty({ description: 'Comments for the blog post' })
   comments: Comment[];
+
+  @OneToMany(() => Media, (media) => media.blogPost, { cascade: true })
+  @ApiProperty({
+    description: 'Array of media associated with the blog post',
+    type: [Media],
+  })
+  media: Media[];
 }
