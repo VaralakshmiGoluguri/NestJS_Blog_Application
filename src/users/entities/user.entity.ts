@@ -1,8 +1,6 @@
-import { Comment } from 'src/comments/entities/comment.entity';
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 import { BlogPost } from 'src/blogs/entities/blog-post.entity';
-import { Rating } from 'src/rating/entities/rating.entity';
 
 @Entity()
 export class User {
@@ -26,5 +24,4 @@ export class User {
 
   @OneToMany(() => BlogPost, (blogPost) => blogPost.userId)
   blogPosts: BlogPost[];
-
 }

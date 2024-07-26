@@ -1,12 +1,13 @@
-import { BlogsService } from 'src/blogs/blogs.service';
-import { UserService } from 'src/users/users.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rating } from './entities/rating.entity';
 import { BlogPost } from 'src/blogs/entities/blog-post.entity';
 import { User } from 'src/users/entities/user.entity';
-import { CreateRatingDto } from './dto/create-rating.dto';
 
 @Injectable()
 export class RatingService {
@@ -15,7 +16,6 @@ export class RatingService {
     private ratingRepository: Repository<Rating>,
     @InjectRepository(BlogPost)
     private BlogRepository: Repository<BlogPost>,
-    private blogsService: BlogsService,
   ) {}
 
   async createRating(
@@ -25,6 +25,13 @@ export class RatingService {
     comment?: string,
   ) {
     const email = user.email;
+    const existingRating = await this.ratingRepository.findOne({
+      where: { blogPost: { id: blogPost.id }, email: email },
+    });
+
+    if (existingRating) {
+      throw new BadRequestException('User has already rated this blog post');
+    }
     const rating = this.ratingRepository.save({
       email,
       blogPost,
@@ -57,4 +64,5 @@ export class RatingService {
     const total = ratings.reduce((sum, rating) => sum + rating.value, 0);
     return ratings.length ? total / ratings.length : 0;
   }
+
 }

@@ -1,9 +1,18 @@
-import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiBody, ApiOperation } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -51,5 +60,27 @@ export class UserController {
     }
     const accessToken = this.userService.generateJwtToken(user);
     return { user, accessToken };
+  }
+
+  @Put(':id')
+  @ApiBody({
+    description: 'User details',
+    type: UpdateUserDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User details updated successfully',
+    type: String,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid credentials',
+  })
+  async updateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const { name, password } = updateUserDto;
+    return this.userService.updateUserDetails(id, name, password);
   }
 }

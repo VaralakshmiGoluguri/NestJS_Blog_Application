@@ -23,6 +23,6 @@ export class Rating {
   email: string;
 
   @ManyToOne(() => BlogPost, (blogPost) => blogPost.ratings)
-  @JoinColumn({ name: 'blog_post_id' })
+  @JoinColumn({ name: 'blogPostId' })
   blogPost: BlogPost;
 }
