@@ -54,3 +54,5 @@ export class CreateBlogPostDto {
   // @IsString()
   // userId: number;
 }
+
+export { MediaUrlDto };

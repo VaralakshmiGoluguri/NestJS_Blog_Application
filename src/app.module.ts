@@ -11,16 +11,6 @@ import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
-    // TypeOrmModule.forRoot({
-    //   type: 'mysql',
-    //   host: '127.0.0.1',
-    //   port: 3306,
-    //   username: 'root',
-    //   password: 'techv1@3',
-    //   database: 'blogapplication',
-    //   synchronize: true,
-    //   entities: [BlogPost, User]
-    // }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env.development',
