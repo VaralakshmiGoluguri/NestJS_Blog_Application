@@ -64,5 +64,4 @@ export class RatingService {
     const total = ratings.reduce((sum, rating) => sum + rating.value, 0);
     return ratings.length ? total / ratings.length : 0;
   }
-
 }

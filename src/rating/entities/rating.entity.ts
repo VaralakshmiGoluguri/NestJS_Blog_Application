@@ -5,7 +5,6 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from 'src/users/entities/user.entity';
 import { BlogPost } from 'src/blogs/entities/blog-post.entity';
 
 @Entity()
@@ -22,7 +21,9 @@ export class Rating {
   @Column()
   email: string;
 
-  @ManyToOne(() => BlogPost, (blogPost) => blogPost.ratings)
+  @ManyToOne(() => BlogPost, (blogPost) => blogPost.ratings, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'blogPostId' })
   blogPost: BlogPost;
 }

@@ -9,7 +9,7 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { Media } from 'src/media/entities/media.entity';
+import { MediaType } from '../media-type.enum';
 
 @Entity()
 export class BlogPost {
@@ -29,13 +29,20 @@ export class BlogPost {
   @ApiProperty({ description: 'Content of the blog post' })
   content: string;
 
-  @Column('simple-array', { nullable: true })
+  // @Column('simple-array', { nullable: true })
+  // @ApiProperty({
+  //   description: 'Array of media URLs related to the blog post',
+  //   type: [String],
+  //   nullable: true,
+  // })
+  // mediaUrls: string[];
+
+  @Column('json', { nullable: true })
   @ApiProperty({
     description: 'Array of media URLs related to the blog post',
-    type: [String],
     nullable: true,
   })
-  mediaUrls: string[];
+  mediaUrls: { url: string; type: MediaType }[];
 
   @Column('float', { default: 0 })
   @ApiProperty({ description: 'Average rating of the blog post', default: 0 })
@@ -57,10 +64,4 @@ export class BlogPost {
   @ApiProperty({ description: 'Comments for the blog post' })
   comments: Comment[];
 
-  @OneToMany(() => Media, (media) => media.blogPost, { cascade: true })
-  @ApiProperty({
-    description: 'Array of media associated with the blog post',
-    type: [Media],
-  })
-  media: Media[];
 }

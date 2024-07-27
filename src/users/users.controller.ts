@@ -6,13 +6,15 @@ import {
   Post,
   Put,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBody, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from './auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -76,6 +78,8 @@ export class UserController {
     status: 401,
     description: 'Unauthorized - Invalid credentials',
   })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,

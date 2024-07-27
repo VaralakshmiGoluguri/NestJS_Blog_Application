@@ -193,7 +193,7 @@ export class BlogsController {
   async deleteAllByUser(
     @Req() req,
   ): Promise<{ statusCode: number; message: string }> {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     return await this.blogsService.deleteAllByUser(userId);
   }
 }

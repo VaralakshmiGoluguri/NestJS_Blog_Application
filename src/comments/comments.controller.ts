@@ -42,7 +42,6 @@ export class CommentsController {
     @Body() content: CreateCommentDto,
   ): Promise<Comment> {
     const userEmail = req.user.email;
-    console.log('content', content);
     return this.commentsService.createComment(content, blogPostId, userEmail);
   }
 

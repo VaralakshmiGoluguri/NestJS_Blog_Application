@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
+import { MediaType } from '../media-type.enum';
 
+class MediaUrlDto {
+  @IsString()
+  url: string;
+
+  @IsEnum(MediaType)
+  type: MediaType;
+}
 export class CreateBlogPostDto {
   @ApiProperty({ description: 'Title of the blog post' })
   @IsString()
@@ -17,15 +31,22 @@ export class CreateBlogPostDto {
   @IsNotEmpty()
   content: string;
 
+  // @ApiProperty({
+  //   description: 'Array of media URLs related to the blog post',
+  //   type: [String],
+  //   nullable: true,
+  // })
+  // @IsArray()
+  // @IsOptional()
+  // mediaUrls?: string[];
+
   @ApiProperty({
     description: 'Array of media URLs related to the blog post',
-    type: [String],
     nullable: true,
   })
   @IsArray()
   @IsOptional()
-  mediaUrls?: string[];
-
+  mediaUrls?: MediaUrlDto[];
   // @ApiProperty({
   //   description: 'UserId of whom the blog post belongs',
   // })
