@@ -12,6 +12,7 @@ describe('App E2E', () => {
   let jwtToken: string;
   let blogPostId: number;
   let commentId: number;
+  let userId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -21,6 +22,11 @@ describe('App E2E', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'testuser12@example.com', password: 'password' });
+    jwtToken = response.body.accessToken;
   });
 
   afterAll(async () => {
@@ -29,9 +35,9 @@ describe('App E2E', () => {
 
   it('should register a user', () => {
     const createUserDto: CreateUserDto = {
-      email: 'testuser3@example.com',
+      email: 'testuser12@example.com',
       password: 'password',
-      name: 'Test User3',
+      name: 'Test User12',
     };
 
     return request(app.getHttpServer())
@@ -41,12 +47,13 @@ describe('App E2E', () => {
       .then((response) => {
         expect(response.body).toHaveProperty('email', createUserDto.email);
         expect(response.body).toHaveProperty('name', createUserDto.name);
+        userId = response.body.id;
       });
   });
 
   it('should log in a user', () => {
     const loginUserDto = {
-      email: 'testuser1@example.com',
+      email: 'testuser12@example.com',
       password: 'password',
     };
 
@@ -63,7 +70,7 @@ describe('App E2E', () => {
   it('should create a blog post', () => {
     const createBlogPostDto: CreateBlogPostDto = {
       title: 'Test Blog Post',
-      brief : 'Brief about the post',
+      brief: 'Brief about the post',
       content: 'This is a test blog post',
     };
 
@@ -79,6 +86,61 @@ describe('App E2E', () => {
           createBlogPostDto.content,
         );
         blogPostId = response.body.id;
+      });
+  });
+
+  it('should create multiple blog posts', () => {
+    return request(app.getHttpServer())
+      .post('/blogs/multiple')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send([
+        {
+          title: 'Post 1',
+          brief: 'Brief 1',
+          content: 'Content 1',
+          mediaUrls: [],
+        },
+        {
+          title: 'Post 2',
+          brief: 'Brief 2',
+          content: 'Content 2',
+          mediaUrls: [],
+        },
+      ])
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.length).toBe(2);
+        expect(res.body[0].title).toBe('Post 1');
+        expect(res.body[1].title).toBe('Post 2');
+      });
+  });
+
+  it('should get all blog posts by user ID', () => {
+    // const userId = 1;
+    return request(app.getHttpServer())
+      .get(`/blogs/user/${userId}`)
+      .expect(200)
+      .expect((res) => {
+        expect(Array.isArray(res.body)).toBe(true);
+      });
+  });
+
+  it('should get blog post by ID', () => {
+    // const blogPostId = 1;
+    return request(app.getHttpServer())
+      .get(`/blogs/${blogPostId}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.id).toBe(blogPostId);
+      });
+  });
+
+  it('should return all blog posts', () => {
+    return request(app.getHttpServer())
+      .get('/blogs')
+      .expect(200)
+      .expect((res) => {
+        expect(Array.isArray(res.body)).toBe(true);
       });
   });
 
@@ -139,6 +201,18 @@ describe('App E2E', () => {
       });
   });
 
+  it('should update a comment by ID', () => {
+    // const commentId = 1;
+    return request(app.getHttpServer())
+      .patch(`/comments/${commentId}`)
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({ comment: 'Updated Comment' })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.id).toBe(commentId);
+      });
+  });
+
   it('should delete a comment', () => {
     return request(app.getHttpServer())
       .delete(`/comments/${commentId}`)
@@ -152,6 +226,45 @@ describe('App E2E', () => {
       });
   });
 
+  it('should delete all comments of a blog post given by the logged-in user', () => {
+    // const blogPostId = 1;
+    return request(app.getHttpServer())
+      .delete(`/comments/post/${blogPostId}`)
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.message).toBe(
+          'All comments for the post deleted successfully',
+        );
+      });
+  });
+
+  it('should return ratings of a blog post', () => {
+    // const blogPostId = 1;
+    return request(app.getHttpServer())
+      .get(`/ratings/${blogPostId}`)
+      .expect(200)
+      .expect((res) => {
+        expect(Array.isArray(res.body)).toBe(true);
+      });
+  });
+
+  it('should update a blog post', () => {
+    // const blogPostId = 1;
+    return request(app.getHttpServer())
+      .patch(`/blogs/${blogPostId}`)
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({
+        title: 'Updated Title',
+        brief: 'Updated Brief',
+        content: 'updated content',
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.message).toBe('Blog post updated successfully');
+      });
+  });
+
   it('should delete a blog post', () => {
     return request(app.getHttpServer())
       .delete(`/blogs/${blogPostId}`)
@@ -162,6 +275,27 @@ describe('App E2E', () => {
           'message',
           'Blog post deleted successfully',
         );
+      });
+  });
+
+  it('should delete all blog posts of the logged-in user', () => {
+    return request(app.getHttpServer())
+      .delete('/blogs/user/all')
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.message).toBe('All blog posts deleted successfully');
+      });
+  });
+
+  it('should update user details', () => {
+    return request(app.getHttpServer())
+      .put(`/users/${userId}`)
+      .set('Authorization', `Bearer ${jwtToken}`)
+      .send({ name: 'Updated Name', password: 'newpassword' })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe('Updated Name');
       });
   });
 });
