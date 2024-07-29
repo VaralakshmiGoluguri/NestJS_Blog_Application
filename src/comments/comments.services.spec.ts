@@ -8,7 +8,6 @@ import { BlogsService } from '../blogs/blogs.service';
 import { User } from '../users/entities/user.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { BlogPost } from '../blogs/entities/blog-post.entity';
-import { MediaType } from '../blogs/media-type.enum';
 
 describe('CommentsService', () => {
   let service: CommentsService;
@@ -49,167 +48,266 @@ describe('CommentsService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should create a comment', async () => {
-    const createCommentDto: CreateCommentDto = {
-      content: 'This is a test comment',
-      name: 'name',
-    };
-    const blogPostId = 1;
-    const email = 'test@example.com';
-    const comment: Comment = {
-      id: 1,
-      content: 'This is a test comment',
-      blogPostId,
-      email,
-      name: 'name',
-      blogPost: new BlogPost(),
-    };
+  describe('createComment', () => {
+    it('should create a comment successfully', async () => {
+      const createCommentDto: CreateCommentDto = {
+        name: 'user',
+        content: 'This is a comment',
+      };
+      const blogPostId = 1;
+      const email = 'user@example.com';
 
-    jest
-      .spyOn(blogsService, 'findById')
-      .mockResolvedValue({ id: blogPostId } as BlogPost);
-    jest.spyOn(userRepository, 'findOne').mockResolvedValue({ email } as User);
-    jest.spyOn(commentRepository, 'save').mockResolvedValue(comment);
+      const blogPost = new BlogPost();
+      blogPost.id = blogPostId;
 
-    const result = await service.createComment(
-      createCommentDto,
-      blogPostId,
-      email,
-    );
-    expect(result).toEqual(comment);
+      const user = new User();
+      user.email = email;
+
+      jest.spyOn(blogsService, 'findById').mockResolvedValue(blogPost);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
+      jest.spyOn(commentRepository, 'save').mockResolvedValue({
+        ...createCommentDto,
+        email,
+        blogPostId,
+      } as Comment);
+
+      const result = await service.createComment(
+        createCommentDto,
+        blogPostId,
+        email,
+      );
+
+      expect(result).toEqual({
+        ...createCommentDto,
+        email,
+        blogPostId,
+      });
+      expect(blogsService.findById).toHaveBeenCalledWith(blogPostId);
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { email } });
+      expect(commentRepository.save).toHaveBeenCalledWith({
+        ...createCommentDto,
+        email,
+        blogPostId,
+      });
+    });
+
+    it('should throw an error if blog post not found', async () => {
+      const createCommentDto: CreateCommentDto = {
+        name: 'user',
+        content: 'This is a comment',
+      };
+      const blogPostId = 1;
+      const email = 'user@example.com';
+
+      jest.spyOn(blogsService, 'findById').mockResolvedValue(null);
+
+      await expect(
+        service.createComment(createCommentDto, blogPostId, email),
+      ).rejects.toThrow('Blog post not found');
+    });
+
+    it('should throw UnauthorizedException if user not found', async () => {
+      const createCommentDto: CreateCommentDto = {
+        name: 'user',
+        content: 'This is a comment',
+      };
+      const blogPostId = 1;
+      const email = 'user@example.com';
+
+      const blogPost = new BlogPost();
+      blogPost.id = blogPostId;
+
+      jest.spyOn(blogsService, 'findById').mockResolvedValue(blogPost);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(
+        service.createComment(createCommentDto, blogPostId, email),
+      ).rejects.toThrow(UnauthorizedException);
+    });
   });
 
-  it('should find all comments by post ID', async () => {
-    const blogPostId = 1;
-    const comments: Comment[] = [
-      {
-        id: 1,
-        content: 'Comment 1',
-        blogPostId,
-        email: 'test1@example.com',
+  describe('Get all comments based on id', () => {
+    it('should find all comments by post ID', async () => {
+      const blogPostId = 1;
+      const comments: Comment[] = [
+        {
+          id: 1,
+          content: 'Comment 1',
+          blogPostId,
+          email: 'test1@example.com',
+          name: 'name',
+          blogPost: new BlogPost(),
+        },
+        {
+          id: 2,
+          content: 'Comment 2',
+          blogPostId,
+          email: 'test2@example.com',
+          name: 'name',
+          blogPost: new BlogPost(),
+        },
+      ];
+
+      jest.spyOn(commentRepository, 'find').mockResolvedValue(comments);
+
+      const result = await service.findAllByPostId(blogPostId);
+      expect(result).toEqual(comments);
+    });
+  });
+
+  describe('Delete a comment', () => {
+    it('should delete a comment', async () => {
+      const commentId = 1;
+      const email = 'test@example.com';
+      const comment: Comment = {
+        id: commentId,
+        content: 'Comment',
+        blogPostId: 1,
+        email,
         name: 'name',
         blogPost: new BlogPost(),
-      },
-      {
-        id: 2,
-        content: 'Comment 2',
-        blogPostId,
-        email: 'test2@example.com',
+      };
+
+      jest.spyOn(commentRepository, 'findOne').mockResolvedValue(comment);
+      jest.spyOn(commentRepository, 'remove').mockResolvedValue(comment);
+
+      await service.deleteComment(commentId, email);
+      expect(commentRepository.remove).toHaveBeenCalledWith(comment);
+    });
+    it("should throw UnauthorizedException when deleting someone else's comment", async () => {
+      const commentId = 1;
+      const email = 'test@example.com';
+      const comment: Comment = {
+        id: commentId,
+        content: 'Comment',
+        blogPostId: 1,
+        email: 'other@example.com',
         name: 'name',
         blogPost: new BlogPost(),
-      },
-    ];
+      };
 
-    jest.spyOn(commentRepository, 'find').mockResolvedValue(comments);
+      jest.spyOn(commentRepository, 'findOne').mockResolvedValue(comment);
 
-    const result = await service.findAllByPostId(blogPostId);
-    expect(result).toEqual(comments);
+      await expect(service.deleteComment(commentId, email)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+    it('should throw an error if comment not found', async () => {
+      const commentId = 1;
+      const userEmail = 'user@example.com';
+
+      jest.spyOn(commentRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(service.deleteComment(commentId, userEmail)).rejects.toThrow(
+        'Comment not found',
+      );
+    });
   });
 
-  it('should delete a comment', async () => {
-    const commentId = 1;
-    const email = 'test@example.com';
-    const comment: Comment = {
-      id: commentId,
-      content: 'Comment',
-      blogPostId: 1,
-      email,
-      name: 'name',
-      blogPost: new BlogPost(),
-    };
+  describe('deleteAllCommentsByUser', () => {
+    it('should delete all comments of a blog post by a user', async () => {
+      const blogPostId = 1;
+      const userEmail = 'user@example.com';
 
-    jest.spyOn(commentRepository, 'findOne').mockResolvedValue(comment);
-    jest.spyOn(commentRepository, 'remove').mockResolvedValue(comment);
+      const user = new User();
+      user.email = userEmail;
 
-    await service.deleteComment(commentId, email);
-    expect(commentRepository.remove).toHaveBeenCalledWith(comment);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
+      const deleteQueryBuilder = {
+        delete: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 1 }),
+      };
+      jest
+        .spyOn(commentRepository, 'createQueryBuilder')
+        .mockReturnValue(deleteQueryBuilder as any);
+
+      await service.deleteAllCommentsByUser(blogPostId, userEmail);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { email: userEmail },
+      });
+      expect(commentRepository.createQueryBuilder).toHaveBeenCalled();
+      expect(deleteQueryBuilder.delete).toHaveBeenCalled();
+      expect(deleteQueryBuilder.where).toHaveBeenCalledWith(
+        'blogPostId = :blogPostId',
+        { blogPostId },
+      );
+      expect(deleteQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'email = :email',
+        { email: userEmail },
+      );
+      expect(deleteQueryBuilder.execute).toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if user is not found', async () => {
+      const blogPostId = 1;
+      const userEmail = 'user@example.com';
+
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(
+        service.deleteAllCommentsByUser(blogPostId, userEmail),
+      ).rejects.toThrow(new UnauthorizedException('User not found'));
+    });
   });
 
-  it("should throw UnauthorizedException when deleting someone else's comment", async () => {
-    const commentId = 1;
-    const email = 'test@example.com';
-    const comment: Comment = {
-      id: commentId,
-      content: 'Comment',
-      blogPostId: 1,
-      email: 'other@example.com',
-      name: 'name',
-      blogPost: new BlogPost(),
-    };
+  describe('update a comment', () => {
+    it('should update a comment', async () => {
+      const commentId = 1;
+      const email = 'test@example.com';
+      const updatedContent = 'Updated comment';
+      const comment: Comment = {
+        id: commentId,
+        content: 'Original comment',
+        blogPostId: 1,
+        email,
+        name: '',
+        blogPost: new BlogPost(),
+      };
 
-    jest.spyOn(commentRepository, 'findOne').mockResolvedValue(comment);
+      jest.spyOn(commentRepository, 'findOneBy').mockResolvedValue(comment);
+      jest
+        .spyOn(commentRepository, 'save')
+        .mockResolvedValue({ ...comment, content: updatedContent });
 
-    await expect(service.deleteComment(commentId, email)).rejects.toThrow(
-      UnauthorizedException,
-    );
-  });
+      const result = await service.updateComment(
+        commentId,
+        email,
+        updatedContent,
+      );
+      expect(result).toEqual({ ...comment, content: updatedContent });
+    });
 
-  it('should delete all comments of a post by a user', async () => {
-    const blogPostId = 1;
-    const email = 'test@example.com';
-    const user = { email } as User;
+    it("should throw UnauthorizedException when updating someone else's comment", async () => {
+      const commentId = 1;
+      const email = 'test@example.com';
+      const updatedContent = 'Updated comment';
+      const comment: Comment = {
+        id: commentId,
+        content: 'Original comment',
+        blogPostId: 1,
+        email: 'other@example.com',
+        name: '',
+        blogPost: new BlogPost(),
+      };
 
-    jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
-    jest
-      .spyOn(commentRepository.createQueryBuilder(), 'delete')
-      .mockReturnThis();
-    jest
-      .spyOn(commentRepository.createQueryBuilder(), 'where')
-      .mockReturnThis();
-    jest
-      .spyOn(commentRepository.createQueryBuilder(), 'andWhere')
-      .mockReturnThis();
-    jest
-      .spyOn(commentRepository.createQueryBuilder(), 'execute')
-      .mockResolvedValue({});
+      jest.spyOn(commentRepository, 'findOneBy').mockResolvedValue(comment);
 
-    await service.deleteAllCommentsByUser(blogPostId, email);
-    expect(commentRepository.createQueryBuilder().delete).toHaveBeenCalled();
-  });
+      await expect(
+        service.updateComment(commentId, email, updatedContent),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+    it('should throw an error if comment not found', async () => {
+      const commentId = 1;
+      const userEmail = 'user@example.com';
 
-  it('should update a comment', async () => {
-    const commentId = 1;
-    const email = 'test@example.com';
-    const updatedContent = 'Updated comment';
-    const comment: Comment = {
-      id: commentId,
-      content: 'Original comment',
-      blogPostId: 1,
-      email,
-      name: '',
-      blogPost: new BlogPost(),
-    };
+      jest.spyOn(commentRepository, 'findOne').mockResolvedValue(null);
 
-    jest.spyOn(commentRepository, 'findOneBy').mockResolvedValue(comment);
-    jest
-      .spyOn(commentRepository, 'save')
-      .mockResolvedValue({ ...comment, content: updatedContent });
-
-    const result = await service.updateComment(
-      commentId,
-      email,
-      updatedContent,
-    );
-    expect(result).toEqual({ ...comment, content: updatedContent });
-  });
-
-  it("should throw UnauthorizedException when updating someone else's comment", async () => {
-    const commentId = 1;
-    const email = 'test@example.com';
-    const updatedContent = 'Updated comment';
-    const comment: Comment = {
-      id: commentId,
-      content: 'Original comment',
-      blogPostId: 1,
-      email: 'other@example.com',
-      name: '',
-      blogPost: new BlogPost(),
-    };
-
-    jest.spyOn(commentRepository, 'findOneBy').mockResolvedValue(comment);
-
-    await expect(
-      service.updateComment(commentId, email, updatedContent),
-    ).rejects.toThrow(UnauthorizedException);
+      await expect(service.deleteComment(commentId, userEmail)).rejects.toThrow(
+        'Comment not found',
+      );
+    });
   });
 });

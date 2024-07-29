@@ -36,7 +36,7 @@ export class CommentsService {
     return await this.commentRepository.save({ ...comment, email, blogPostId });
   }
 
-  findAllByPostId(blogPostId: number): Promise<Comment[]> {
+  async findAllByPostId(blogPostId: number): Promise<Comment[]> {
     return this.commentRepository.find({ where: { blogPostId } });
   }
 
