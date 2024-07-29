@@ -5,7 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { BlogPost } from 'src/blogs/entities/blog-post.entity';
+import { BlogPost } from '../../blogs/entities/blog-post.entity';
 
 @Entity()
 export class Rating {
@@ -14,9 +14,6 @@ export class Rating {
 
   @Column({ type: 'int' })
   value: number;
-
-  @Column({ type: 'text', nullable: true })
-  comment: string;
 
   @Column()
   email: string;

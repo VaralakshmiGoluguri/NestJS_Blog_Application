@@ -5,9 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BlogPost } from './entities/blog-post.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateBlogPostDto } from './dto/create-blog.dto';
-import { UserService } from 'src/users/users.service';
+import { UserService } from '../users/users.service';
 
 @Injectable()
 export class BlogsService {
@@ -52,27 +52,36 @@ export class BlogsService {
     id: number,
     updateBlogPostDto: Partial<CreateBlogPostDto>,
     userId: number,
-  ): Promise<UpdateResult> {
+  ): Promise<{ statusCode: number; message: string }> {
     const post = await this.findById(id);
     if (post && post.userId === userId) {
       const result = await this.BlogRepository.update(id, updateBlogPostDto);
       if (result.affected === 0) {
         throw new NotFoundException(`Blog post with ID ${id} not found`);
       }
-      return result;
+      return {
+        statusCode: 200,
+        message: 'Blog post updated successfully',
+      };
     }
     throw new ForbiddenException('You are not authorized to update this post');
   }
 
   //Delete BlogPost by id
-  async deleteBlogPost(id: number, userId: number): Promise<DeleteResult> {
+  async deleteBlogPost(
+    id: number,
+    userId: number,
+  ): Promise<{ statusCode: number; message: string }> {
     const post = await this.findById(id);
     if (post && post.userId === userId) {
       const result = await this.BlogRepository.delete(id);
       if (result.affected === 0) {
         throw new NotFoundException(`Blog post with ID ${id} not found`);
       }
-      return result;
+      return {
+        statusCode: 200,
+        message: 'Blog post deleted successfully',
+      };
     }
     throw new ForbiddenException('You are not authorized to delete this post');
   }

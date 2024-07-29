@@ -16,10 +16,8 @@ import {
 } from '@nestjs/swagger';
 import { RatingService } from './rating.service';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { User } from 'src/users/entities/user.entity';
-import { Request } from 'express';
-import { JwtAuthGuard } from 'src/users/auth.guard';
-import { BlogsService } from 'src/blogs/blogs.service';
+import { JwtAuthGuard } from '../users/auth.guard';
+import { BlogsService } from '../blogs/blogs.service';
 
 @ApiTags('Ratings')
 @Controller('ratings')
@@ -52,7 +50,6 @@ export class RatingController {
       user,
       blogPost,
       createRatingDto.value,
-      createRatingDto.comment,
     );
   }
 

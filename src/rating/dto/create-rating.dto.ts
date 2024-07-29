@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsInt, Max, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRatingDto {
@@ -7,9 +7,4 @@ export class CreateRatingDto {
   @Min(1)
   @Max(5)
   value: number;
-
-  @ApiProperty({ description: 'Comment', required: false })
-  @IsString()
-  @IsOptional()
-  comment?: string;
 }

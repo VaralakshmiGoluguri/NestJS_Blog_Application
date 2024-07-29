@@ -8,7 +8,13 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBody, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiBody,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
@@ -33,6 +39,7 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 409, description: 'User already exists' })
+  @ApiOperation({ summary: 'Signup new user' })
   async signup(@Body() createUserDto: CreateUserDto): Promise<User> {
     return await this.userService.createUser(createUserDto);
   }
@@ -43,7 +50,7 @@ export class UserController {
     type: LoginUserDto,
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'User login successful',
     type: String,
   })
@@ -54,14 +61,14 @@ export class UserController {
   @ApiOperation({ summary: 'Login user and return JWT' })
   async login(
     @Body() loginUserDto: LoginUserDto,
-  ): Promise<{ user: User; accessToken: string }> {
+  ): Promise<{ accessToken: string }> {
     const { email, password } = loginUserDto;
     const user = await this.userService.validateUser(email, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const accessToken = this.userService.generateJwtToken(user);
-    return { user, accessToken };
+    return { accessToken };
   }
 
   @Put(':id')
@@ -72,18 +79,19 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'User details updated successfully',
-    type: String,
+    type: User,
   })
   @ApiResponse({
     status: 401,
-    description: 'Unauthorized - Invalid credentials',
+    description: 'Unauthorized',
   })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Edit User Details' })
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<User> {
     const { name, password } = updateUserDto;
     return this.userService.updateUserDetails(id, name, password);
   }

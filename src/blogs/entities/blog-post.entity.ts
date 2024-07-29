@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Rating } from 'src/rating/entities/rating.entity';
-import { User } from 'src/users/entities/user.entity';
-import { Comment } from 'src/comments/entities/comment.entity';
+import { Rating } from '../../rating/entities/rating.entity';
+import { User } from '../../users/entities/user.entity';
+import { Comment } from '../../comments/entities/comment.entity';
 import {
   Entity,
   Column,
@@ -29,14 +29,6 @@ export class BlogPost {
   @ApiProperty({ description: 'Content of the blog post' })
   content: string;
 
-  // @Column('simple-array', { nullable: true })
-  // @ApiProperty({
-  //   description: 'Array of media URLs related to the blog post',
-  //   type: [String],
-  //   nullable: true,
-  // })
-  // mediaUrls: string[];
-
   @Column('json', { nullable: true })
   @ApiProperty({
     description: 'Array of media URLs related to the blog post',
@@ -63,5 +55,4 @@ export class BlogPost {
   @OneToMany(() => Comment, (comment) => comment.blogPost)
   @ApiProperty({ description: 'Comments for the blog post' })
   comments: Comment[];
-
 }

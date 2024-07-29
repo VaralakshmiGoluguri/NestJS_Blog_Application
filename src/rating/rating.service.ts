@@ -6,8 +6,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Rating } from './entities/rating.entity';
-import { BlogPost } from 'src/blogs/entities/blog-post.entity';
-import { User } from 'src/users/entities/user.entity';
+import { BlogPost } from '../blogs/entities/blog-post.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class RatingService {
@@ -18,12 +18,7 @@ export class RatingService {
     private BlogRepository: Repository<BlogPost>,
   ) {}
 
-  async createRating(
-    user: User,
-    blogPost: BlogPost,
-    value: number,
-    comment?: string,
-  ) {
+  async createRating(user: User, blogPost: BlogPost, value: number) {
     const email = user.email;
     const existingRating = await this.ratingRepository.findOne({
       where: { blogPost: { id: blogPost.id }, email: email },
@@ -32,11 +27,10 @@ export class RatingService {
     if (existingRating) {
       throw new BadRequestException('User has already rated this blog post');
     }
-    const rating = this.ratingRepository.save({
+    const rating = await this.ratingRepository.save({
       email,
       blogPost,
       value,
-      comment,
     });
     const averageRating = await this.getAverageRating(blogPost.id);
     blogPost.averageRating = parseFloat(averageRating.toFixed(2));
@@ -60,7 +54,6 @@ export class RatingService {
     const ratings = await this.ratingRepository.find({
       where: { blogPost: { id: blogPostId } },
     });
-
     const total = ratings.reduce((sum, rating) => sum + rating.value, 0);
     return ratings.length ? total / ratings.length : 0;
   }

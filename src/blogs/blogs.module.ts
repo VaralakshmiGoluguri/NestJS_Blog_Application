@@ -3,8 +3,8 @@ import { BlogsService } from './blogs.service';
 import { BlogsController } from './blogs.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlogPost } from './entities/blog-post.entity';
-import { User } from 'src/users/entities/user.entity';
-import { UserService } from 'src/users/users.service';
+import { User } from '../users/entities/user.entity';
+import { UserService } from '../users/users.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([BlogPost, User])],

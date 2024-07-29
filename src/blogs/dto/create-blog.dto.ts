@@ -9,9 +9,11 @@ import {
 import { MediaType } from '../media-type.enum';
 
 class MediaUrlDto {
+  @ApiProperty({ description: 'Url of the media' })
   @IsString()
   url: string;
 
+  @ApiProperty({ description: 'Type of the media(audio,video,image)' })
   @IsEnum(MediaType)
   type: MediaType;
 }
@@ -31,15 +33,6 @@ export class CreateBlogPostDto {
   @IsNotEmpty()
   content: string;
 
-  // @ApiProperty({
-  //   description: 'Array of media URLs related to the blog post',
-  //   type: [String],
-  //   nullable: true,
-  // })
-  // @IsArray()
-  // @IsOptional()
-  // mediaUrls?: string[];
-
   @ApiProperty({
     description: 'Array of media URLs related to the blog post',
     nullable: true,
@@ -47,12 +40,6 @@ export class CreateBlogPostDto {
   @IsArray()
   @IsOptional()
   mediaUrls?: MediaUrlDto[];
-  // @ApiProperty({
-  //   description: 'UserId of whom the blog post belongs',
-  // })
-  // @IsNotEmpty()
-  // @IsString()
-  // userId: number;
 }
 
 export { MediaUrlDto };

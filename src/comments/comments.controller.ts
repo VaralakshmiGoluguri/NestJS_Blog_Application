@@ -19,7 +19,7 @@ import {
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Comment } from './entities/comment.entity';
-import { JwtAuthGuard } from 'src/users/auth.guard';
+import { JwtAuthGuard } from '../users/auth.guard';
 
 @ApiTags('Comments')
 @Controller('comments')
